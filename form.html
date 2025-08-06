@@ -40,13 +40,18 @@
       font-weight: bold;
     }
 
-    input[type="text"], input[type="tel"] {
+    input[type="text"],
+    input[type="tel"] {
       width: 100%;
       padding: 10px;
       margin-top: 5px;
       border: 1px solid #ccc;
       border-radius: 6px;
       font-size: 16px;
+    }
+
+    input[type="checkbox"] {
+      margin-right: 10px;
     }
 
     button {
@@ -78,6 +83,22 @@
     .error {
       color: red;
     }
+
+    .final-message {
+      margin-top: 30px;
+      padding: 15px;
+      background-color: #e0ffe0;
+      border: 1px solid #a5d6a7;
+      border-radius: 10px;
+      text-align: left;
+      color: #333;
+      font-size: 15px;
+      display: none;
+    }
+
+    .final-message.show {
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -93,14 +114,37 @@
       <label for="telefono">Telefono</label>
       <input type="tel" id="telefono" name="telefono" placeholder="+39..." required>
 
+      <label for="telegram">Username Telegram</label>
+      <input type="text" id="telegram" name="telegram" placeholder="@tuonome" required>
+
+      <label style="margin-top: 20px;">
+        <input type="checkbox" id="consenso" required>
+        Acconsento al trattamento dei dati secondo la normativa GDPR. I dati saranno utilizzati solo per fini interni all’estrazione e non verranno divulgati a terzi.
+      </label>
+
       <button type="submit">Invia</button>
     </form>
+
     <div id="risultato" class="message"></div>
+
+    <div class="final-message" id="istruzioni">
+      <strong>🎉 Ci siamo quasi!! 🎉</strong><br><br>
+      Abbiamo ancora bisogno di un’ultima informazione.<br>
+      📸 <strong>Fai uno screenshot a questa pagina per non perdere le istruzioni.</strong><br><br>
+      <ul>
+        <li>Apri l'app YouTube sul tuo telefono</li>
+        <li>In basso a destra clicca sulla voce <strong>"TU"</strong></li>
+        <li>In alto a destra clicca sull’ingranaggio ⚙️</li>
+        <li>Tra le voci clicca su <strong>"Acquisti e abbonamenti"</strong></li>
+        <li>Fai uno screenshot di tutto lo schermo e invialo su Telegram in privato a <strong>@MatteGrey96</strong></li>
+      </ul>
+    </div>
   </div>
 
   <script>
     const form = document.getElementById('contactForm');
     const risultato = document.getElementById('risultato');
+    const istruzioni = document.getElementById('istruzioni');
 
     form.addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -108,6 +152,8 @@
       const nome = document.getElementById('nome').value.trim();
       const cognome = document.getElementById('cognome').value.trim();
       const telefono = document.getElementById('telefono').value.trim();
+      const telegram = document.getElementById('telegram').value.trim();
+      const consenso = document.getElementById('consenso').checked;
 
       if (!telefono.startsWith("+39")) {
         risultato.textContent = "❌ Il numero di telefono deve iniziare con +39.";
@@ -115,13 +161,22 @@
         return;
       }
 
+      if (!consenso) {
+        risultato.textContent = "❌ Devi accettare il consenso al trattamento dei dati.";
+        risultato.className = "message error";
+        return;
+      }
+
+      risultato.textContent = "⏳ Invio in corso...";
+      risultato.className = "message";
+
       const formData = new FormData();
       formData.append("nome", nome);
       formData.append("cognome", cognome);
       formData.append("telefono", telefono);
+      formData.append("telegram", telegram);
 
       const queryString = new URLSearchParams(formData).toString();
-
       const url = "https://script.google.com/macros/s/AKfycbxXIbfn9U6ZThB_bPYNJmQDuiS8RT_zaSgIBvcpEd9Yc-aGYjLblXunXxInrx4wKQA/exec";
 
       try {
@@ -139,6 +194,7 @@
           risultato.textContent = "✅ Dati inviati correttamente!";
           risultato.className = "message success";
           form.reset();
+          istruzioni.classList.add("show");
         } else if (text.includes("nome")) {
           risultato.textContent = "❌ Nome già registrato.";
           risultato.className = "message error";
