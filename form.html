@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <title>Partecipa all'estrazione!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-image: url('https://www.transparenttextures.com/patterns/pokemon.png');
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f4f4;
+      background-repeat: repeat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+
+    h2 {
+      color: #d62828;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    input[type="text"], input[type="tel"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #3a86ff;
+      border: none;
+      color: white;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    button:hover {
+      background-color: #265ccd;
+    }
+
+    .message {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    .success {
+      color: green;
+    }
+
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Partecipa all'estrazione!</h2>
+    <form id="contactForm">
+      <label for="nome">Nome</label>
+      <input type="text" id="nome" name="nome" required>
+
+      <label for="cognome">Cognome</label>
+      <input type="text" id="cognome" name="cognome" required>
+
+      <label for="telefono">Telefono</label>
+      <input type="tel" id="telefono" name="telefono" placeholder="+39..." required>
+
+      <button type="submit">Invia</button>
+    </form>
+    <div id="risultato" class="message"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('contactForm');
+    const risultato = document.getElementById('risultato');
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const nome = document.getElementById('nome').value.trim();
+      const cognome = document.getElementById('cognome').value.trim();
+      const telefono = document.getElementById('telefono').value.trim();
+
+      if (!telefono.startsWith("+39")) {
+        risultato.textContent = "❌ Il numero di telefono deve iniziare con +39.";
+        risultato.className = "message error";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("nome", nome);
+      formData.append("cognome", cognome);
+      formData.append("telefono", telefono);
+
+      const queryString = new URLSearchParams(formData).toString();
+
+      const url = "https://script.google.com/macros/s/AKfycbxXIbfn9U6ZThB_bPYNJmQDuiS8RT_zaSgIBvcpEd9Yc-aGYjLblXunXxInrx4wKQA/exec";
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          body: queryString,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        });
+
+        const text = await response.text();
+
+        if (text === "OK") {
+          risultato.textContent = "✅ Dati inviati correttamente!";
+          risultato.className = "message success";
+          form.reset();
+        } else if (text.includes("nome")) {
+          risultato.textContent = "❌ Nome già registrato.";
+          risultato.className = "message error";
+        } else if (text.includes("cognome")) {
+          risultato.textContent = "❌ Cognome già registrato.";
+          risultato.className = "message error";
+        } else if (text.includes("telefono")) {
+          risultato.textContent = "❌ Numero di telefono già registrato.";
+          risultato.className = "message error";
+        } else {
+          risultato.textContent = "❌ Errore imprevisto: " + text;
+          risultato.className = "message error";
+        }
+      } catch (err) {
+        risultato.textContent = "❌ Errore di rete. Riprova.";
+        risultato.className = "message error";
+      }
+    });
+  </script>
+</body>
+</html>
