@@ -5,7 +5,6 @@
   <title>Partecipa all'estrazione!</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-  
     body {
       margin: 0;
       padding: 0;
@@ -41,6 +40,13 @@
       font-weight: bold;
     }
 
+    .phone-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    select,
     input[type="text"],
     input[type="tel"] {
       width: 100%;
@@ -49,6 +55,12 @@
       border: 1px solid #ccc;
       border-radius: 6px;
       font-size: 16px;
+    }
+
+    select {
+      width: 80px;
+      background-color: #eee;
+      pointer-events: none;
     }
 
     input[type="checkbox"] {
@@ -100,6 +112,11 @@
     .final-message.show {
       display: block;
     }
+
+    .note {
+      font-size: 12px;
+      color: #555;
+    }
   </style>
 </head>
 <body>
@@ -113,10 +130,15 @@
       <input type="text" id="cognome" name="cognome" required>
 
       <label for="telefono">Telefono</label>
-      <input type="tel" id="telefono" name="telefono" placeholder="" required>
+      <div class="phone-group">
+        <select disabled>
+          <option selected>+39</option>
+        </select>
+        <input type="tel" id="telefono" name="telefono" placeholder="Numero (9-10 cifre)" required>
+      </div>
 
-      <label for="telegram">Username Telegram</label>
-      <input type="text" id="telegram" name="telegram" placeholder="@tuonome" required>
+      <label for="telegram">Username Telegram <span class="note">(facoltativo)</span></label>
+      <input type="text" id="telegram" name="telegram" placeholder="@tuonome">
 
       <label style="margin-top: 20px;">
         <input type="checkbox" id="consenso" required>
@@ -152,13 +174,18 @@
 
       const nome = document.getElementById('nome').value.trim();
       const cognome = document.getElementById('cognome').value.trim();
-      const telefono = document.getElementById('telefono').value.trim();
-      const telegram = document.getElementById('telegram').value.trim();
+      const numero = document.getElementById('telefono').value.replace(/\D/g, '').trim(); // solo cifre
+      const telegramRaw = document.getElementById('telegram').value.trim();
       const consenso = document.getElementById('consenso').checked;
-
 
       if (!consenso) {
         risultato.textContent = "❌ Devi accettare il consenso al trattamento dei dati.";
+        risultato.className = "message error";
+        return;
+      }
+
+      if (numero.length < 9 || numero.length > 10) {
+        risultato.textContent = "❌ Il numero di telefono deve avere 9 o 10 cifre.";
         risultato.className = "message error";
         return;
       }
@@ -169,8 +196,8 @@
       const formData = new FormData();
       formData.append("nome", nome);
       formData.append("cognome", cognome);
-      formData.append("telefono", telefono);
-      formData.append("telegram", telegram);
+      formData.append("telefono", numero);
+      formData.append("telegram", telegramRaw);
 
       const queryString = new URLSearchParams(formData).toString();
       const url = "https://script.google.com/macros/s/AKfycbxXIbfn9U6ZThB_bPYNJmQDuiS8RT_zaSgIBvcpEd9Yc-aGYjLblXunXxInrx4wKQA/exec";
@@ -191,14 +218,11 @@
           risultato.className = "message success";
           form.reset();
           istruzioni.classList.add("show");
-        } else if (text.includes("nome")) {
-          risultato.textContent = "❌ Nome già registrato.";
-          risultato.className = "message error";
-        } else if (text.includes("cognome")) {
-          risultato.textContent = "❌ Cognome già registrato.";
-          risultato.className = "message error";
         } else if (text.includes("telefono")) {
           risultato.textContent = "❌ Numero di telefono già registrato.";
+          risultato.className = "message error";
+        } else if (text.includes("telegram")) {
+          risultato.textContent = "❌ Username Telegram già registrato.";
           risultato.className = "message error";
         } else {
           risultato.textContent = "❌ Errore imprevisto: " + text;
